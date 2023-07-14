@@ -1,0 +1,594 @@
+---
+pagetitle: "Tutorial ??: Google Earth and in Python"
+author: "Arno Timmer"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  knitrBootstrap::bootstrap_document:
+    title: "Tutorial ??: Google Earth and in Python"
+    theme: "simplex"
+    highlight: Tomorrow Night Bright
+    menu: FALSE
+    theme.chooser: TRUE
+    highlight.chooser: TRUE
+---
+
+<style type="text/css">
+body {max-width: none;}
+a:visited {color: #91170a;}
+</style>
+
+# Python and Google Earth Engine
+
+
+```{block, type="alert alert-danger"}
+
+**A note on running this tutorial**
+
+
+We recommend using Jupyter Notebook to run the code in this tutorial. The code today makes use of interactive widgets, which will display inline when Jupyter Notebooks. You can run the code in an IDE like Spyder, but where the variable `Map` is called, you will have to export the map and look at it in html using the following code: 
+
+
+`Map.to_html(filename='map.html', title='My Map', width='100%', height='880px')`
+
+```
+
+### Learning goals for today: 
+
+- Get introduced to object oriented programming and learn to read javascript documentation
+- Visualize raster and vector data using the google earth engine in python
+- Use the python api for earth engine for doing geospatial analysis. 
+
+Many of you may already be familiar with or have explored Google Earth (https://earth.google.com/web/). Within Google Earth, you can virtually explore the Earth from your computer. The application offers various maps and information, including the familiar Google Maps base map and additional layers such as the age of the sea floor. Moreover, Google Earth (or more accurately, its "engine") serves as a powerful cloud-based computational platform for geospatial analysis. It provides a wealth of information and tools that are accessible to everyone (with a Google account). 
+
+## Javascript, API's and Object Oriented Programming
+
+Google Earth Engine (GEE) is the underlying platform behind Google Earth, initially developed and released as a JavaScript API. But what exactly does that mean? Let's break it down into JavaScript and API.
+
+### API
+An API stands for "Application Programming Interface" and serves as a standardized language or set of rules that allows different software components to communicate with each other. APIs are commonly used for tasks such as accessing data (e.g., weather data from OpenWeatherMap) or interacting with  [a command line tool: GDAL](https://geoscripting-wur.github.io/PythonRaster/) with python or R, as we covered in the previous tutorials.
+
+### JavaScript
+JavaScript (JS) is a widely used programming language primarily employed for web development. It follows an object-oriented programming (OOP) paradigm, which emphasizes creating reusable code through objects. Objects in JS can encapsulate both data (properties) and functionality (methods) within a single entity. OOP differs somewhat from the programming style we have used thus far, although Python can also be used as an OOP language. Working with the GEE Python API offers a fantastic opportunity to become familiar with object-oriented programming while leveraging the immense power of Google's engine.
+
+### Object-Oriented Programming in Python
+
+In this tutorial, we will learn how to interact with GEE. However, before we dive into that, it's essential to understand the principles of Object-Oriented Programming (OOP) and how it is implemented in Python.
+
+In Python, objects are created and manipulated using classes. A class serves as a blueprint that defines the structure and behavior of objects. It brings together data (properties) and functions (methods) into a single object.
+
+To define a class in Python, we use the `class` keyword, followed by the name of the class. Let's take a look at an example of a simple class called `Person`:
+
+```{r, engine = 'Python', eval=FALSE}
+class Person:
+    def __init__(self, name, age):
+        self.name = name  # < this is a property
+        self.age = age    # < this is also a property
+    
+    def greet(self):  # < This "function" is a method
+        print(f"Hello, my name is {self.name} and I'm {self.age} years old.")
+```
+
+In the provided code, the `__init__` method is a special method known as a *constructor*. It is automatically invoked when an object is created from the class. The `self` parameter refers to the instance of the class itself, allowing access to its properties and methods. Whenever a method is defined within a class, we give `self` as the first parameter. 
+
+The `Person` class has two properties, `name` and `age`, as well as one method, `greet`. The `greet` method prints a greeting message that includes the person's name and age.
+
+To create an instance of the `Person` class, you simply call the class as if it were a function and assign the result to a variable:
+
+```{r, engine = 'Python', eval=FALSE}
+person1 = Person("Alice", 25)
+person2 = Person("Bob", 30)
+```
+
+We have created two objects, `person1` and `person2`, which are instances of the `Person` class. Now we can access the properties and call the methods of these objects:
+
+```{r, engine = 'Python', eval=FALSE}
+print(person1.name)  # Output: Alice
+print(person2.age)   # Output: 30
+person1.greet()      # Output: Hello, my name is Alice and I'm 25 years old.
+person2.greet()      # Output: Hello, my name is Bob and I'm 30 years old.
+```
+
+This example is straightforward, but keep in mind that classes can become more complex. 
+
+```{block, type="alert alert-success"}
+> **Question 1**: Take a look at the creation of a GeoPandas `GeoSeries` [here](https://github.com/geopandas/geopandas/blob/main/geopandas/geoseries.py). It may seem complicated and hard to read, but it is well-documented, so try to understand some of its functionality. The `to_json` method, for example, provides straightforward functionality (though it may still be challenging to read due to its complexity).
+```
+
+
+You may have noticed that class definitions differ from what we have learned. In the GeoPandas example, the class is defined as follows:
+
+```{r, engine = 'Python', eval=FALSE}
+class GeoSeries(GeoPandasBase, Series):
+```
+
+However, we previously learned to define a class like this:
+
+```{r, engine = 'Python', eval=FALSE}
+class GeoSeries:
+```
+
+The difference lies in the code within the parentheses, which represents *inheritance*. The class will inherit all the functionality from the classes specified as arguments, in this case, `GeoPandasBase` and `Series`. The `Series` object refers to the [Pandas.Series](https://github.com/pandas-dev/pandas/blob/main/pandas/core/series.py#L243C15-L243C15), which contains thousands of lines of code with various functionalities. Therefore, the GeoPandas `GeoSeries` contains all the functionalities implemented in Pandas, as well as those from `GeoPandasBase` and `GeoPandas.Series` itself.
+
+Phew, that's a lot of complicated code, and it may seem overwhelming. You don't need to understand every detail. The important thing is to grasp the value of classes, objects, and inheritance. How does this work in a simple example?
+
+So, we've learned that with inheritance, classes can acquire all the functionality from other classes and build upon that. Let's create a new object called `Student`, which will inherit all the properties and methods from the `Person` class we created earlier.
+
+```{r, engine = 'Python', eval=FALSE}
+class Student(Person):
+    def __init__(self, name, age, student_id):
+        super().__init__(name, age)
+        self.student_id = student_id
+    
+    def study(self):
+        print(f"{self.name} is studying.")
+
+```
+
+In the provided code, the `Student` class inherits from the `Person` class, which we will refer to as the superclass. By doing so, it extends the functionality of the superclass by adding a new property (`student_id`) and a new method (`study`). The `super()` function is used to call the superclass's `__init__` method, allowing the subclass to initialize the inherited properties.
+
+As a result, the `Student` class contains both the methods and properties inherited from the `Person` class, as well as the additional ones defined within the `Student` class:
+
+```{r, engine = 'Python', eval=FALSE}
+student = Student("Eve", 22, "123456")
+print(student.name)         # Output: Eve
+print(student.student_id)   # Output: 123456
+student.greet()             # Output: Hello, my name is Eve and I'm 22 years old.
+student.study()             # Output: Eve is studying.
+```
+
+In this example, `student` is an instance of the `Student` class. It can access the inherited properties from the `Person` class, such as `name`, as well as the newly added property `student_id`. Similarly, it can invoke both the inherited method `greet` and the additional method `study`, which are specific to the `Student` class.
+
+## Google Earth Engine
+
+Google Earth Engine (GEE) is a comprehensive platform that offers a vast collection of geospatial data along with powerful computational capabilities. It enables users to analyze and visualize geospatial data on a global scale, making it a valuable tool for various research domains such as environmental monitoring and resource management.
+
+One of the prominent features of GEE is its extensive collection of raster data sources. You can explore the catalog of available datasets [here](https://developers.google.com/earth-engine/datasets/catalog). Additionally, GEE provides access to raster time series and non-raster data as well. For specific use cases and examples, you can refer to the article by Pérez-Cutillas and colleagues published this year [here](https://www.sciencedirect.com/science/article/pii/S2352938522002154). They conducted a systematic review of research conducted using GEE. From their article:
+
+
+> The results of the meta-analysis following the systematic review showed that: (i) the Landsat 8 was the most widely-used satellite (25%); (i) the non-parametric classification methods, mainly Random Forest, were the most recurrent algorithms (31%); and (iii) the water resources assessment and prediction were the most common methodological applications (22%).
+
+-- Pérez-Cutillas et al., 2023
+
+### Nighttime Light Emission
+
+In this tutorial, we will conduct a relatively straightforward analysis to demonstrate commonly used tools in Google Earth Engine (GEE). Our main focus is to show you how to work with GEE in Python, locate tools and documentation, and read the JavaScript (JS) documentation.
+
+The analysis we will perform involves comparing the amount of light emitted at night in the Netherlands over time. However, you can choose a different area for your analysis, as we will be using a global dataset from 2012 to the present.
+
+To set up the required environment, you will need the following dependencies. Save the following YAML code in a new file named `env.yaml` and create and activate the environment using mamba 
+
+```{r, engine = 'yaml', eval=FALSE}
+name: pythonGee
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - jupyter
+  - earthengine-api
+  - geemap
+  - pygadm
+  - geopandas
+  - geojson
+```
+
+To test the environment, try importing the following packages:
+
+```{r, engine = 'Python', eval=FALSE}
+import ee
+import geemap 
+import pygadm
+import geopandas as gpd
+import geojson
+```
+
+To work with Google Earth Engine (GEE), you will need a Google account for authorization. The authentication process can be initiated by calling the `Authenticate` function from the `ee` module. Follow these steps:
+
+1. After running the `Authenticate` function, a URL will be printed in the output.
+1. Click on the URL, which will redirect you to a Google account login page.
+1. Log in to your Google account to create an authorization token.
+1. When prompted with a warning stating that Google has not verified the app, click "Continue". This warning is shown because the code we are about to run is not verified by Google, ensuring your account's security.
+1. On the authorization page, select all the checkboxes. This grants permission to access GEE data and manage data and permissions in the cloud storage where the analysis will be performed.
+1. Finally, you will see an authorization code. Copy the code and paste it into the text box that appears after running the `Authenticate` function. Press Enter to complete the authentication process.
+
+```{r, engine = 'Python', eval=FALSE}
+ee.Authenticate()
+```
+
+You now have (hopefully) succesfully authenticated. Next we have to initialize using the `Initialize()` method: 
+
+```{r, engine = 'Python', eval=FALSE}
+ee.Initialize()
+```
+
+If you do not encounter any warnings or errors, you have successfully authenticated and are now ready to work with the Earth Engine library in Python! Congratulations! 
+
+The next time you work in the same environment, you won't need to authenticate again. Simply run the `Initialize` function, and you'll be all set to use the Earth Engine library. 
+
+#### Some notes on documentation 
+
+In the documentation we will refer to today, you will notice that there are examples available for both JavaScript and Python (Google Colab). This is because Google is working on implementing all the JavaScript functionality in Python. Not all the documentation or examples are at this time available in Python. Luckily, although the languages are quite different, the JavaScript and Python implementation for this package are very similair. It is a good skill to be able to read some JavaScript. Additionally, we are not sure what documentation is available for python at the time of following this tutorial. Therefor we will refer to the JavaScript documentation, but we will highlight any important differences and provide guidance on using this code in Python.
+
+Some common differences are the following. To initialize a variable, in Python you can simply type: 
+
+```{r, engine = 'Python', eval=FALSE}
+variablename = 'value'
+```
+
+In Javascript we can initialize a variable in various ways. The difference is where this variable in the code will be known: 
+
+```{r, engine = 'Javascript', eval=FALSE}
+var variablename = 'value'
+let variablename = 'value'
+const variablename = 'value'
+```
+
+Another often occuring difference in the documentation is how variables are passed to a function. In python we can do that as we are used to: 
+
+```{r, engine = 'Python', eval=FALSE}
+multiStats = img.reduceRegions(
+  collection=regionCol,
+  reducer=reducer,
+  scale=30,
+  crs='EPSG:3310',
+)
+```
+
+In Javascript we have to pass an object, similar to a dictionary in python:
+
+```{r, engine = 'Javascript', eval=FALSE}
+var multiStats = img.reduceRegions({
+  collection: regionCol,
+  reducer: reducer,
+  scale: 30,
+  crs: 'EPSG:3310',
+});
+```
+
+You do not need to understand this code itself for now, just note the differences in syntax. 
+
+### Accessing Night Light Data
+
+To analyze the development of light emission over the past 10 years, we will compare the amount of emitted light per province on a monthly basis.
+
+For this analysis, we will need data on emitted light. We will use the VIIRS Nighttime data, which you can learn more about [here](https://developers.google.com/earth-engine/datasets/catalog/NOAA_VIIRS_DNB_MONTHLY_V1_VCMCFG). This dataset provides monthly average radiance composite images using nighttime data from the Visible Infrared Imaging Radiometer Suite (VIIRS) Day/Night Band (DNB). You can also explore the data in [this Esri viewer](https://www.arcgis.com/apps/mapviewer/index.html?layers=edabcbb5407547f5bc883018eb6e7986). To work with this data, we can create an `ImageCollection` object. You can refer to the [documentation](https://developers.google.com/earth-engine/apidocs/ee-imagecollection) for more details.
+
+To create an `ImageCollection`, you can use the following command:
+
+```{r, engine = 'Python', eval=FALSE}
+# Import the night time light emision data.
+viirs_image_collection = ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG")
+```
+
+Note that this is the exact same code as in the JS documentation, but adapted for this tutorial. In Python, to retrieve information about an object in the form of a dictionary, we need can call the `getInfo()` method.
+
+```{r, engine = 'Javascript', eval=FALSE}
+print('Image collection from a string', ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG"));
+```
+
+In Python, we use the following command:
+
+```{r, engine = 'Python', eval=FALSE}
+print(ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG").getInfo()['properties'])
+```
+
+Here, we call the `getInfo` method to convert the object information to a dictionary that we can extract useful information from. However, when working in Jupyter notebooks, we can simply call the object itself to display it inline:
+
+```{r, engine = 'Python', eval=FALSE}
+ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG")
+```
+
+In Jupyter, this will display the ImageCollection object. 
+
+Inspecting the ImageCollection object, we can see that it has several properties. It includes `type`, `id`, `version`, an empty list for `bands`, 23 `properties`, and 132 `features`. These properties are similar to what you would expect in a [GeoJSON](https://geojson.org/) representation of a FeatureCollection.
+
+The `type`, `id`, and `version` provide information about the data and the object type. At this point, the object has an empty list for bands, indicating that there are no bands defined yet. It has 23 properties, which describe information about the collection as a whole (e.g., it is a monthly collection). The collection contains features, which are individual images. Each feature (image) has its own `type`, `id`, `version`, `bands`, and `properties`. There are no features within these images themselves, as are no collections.
+
+
+### Earth Engine as a viewer
+Now, let's explore how we can use Google Earth Engine as a viewer. As mentioned earlier, Google Earth Engine is not only a data collection but also a platform with tools and a viewer. To interact with the viewer, we will utilize a package called `geemap`. Geemap also provides useful tools, such as data conversion to and from GEE native objects. We'll cover this in more detail later.
+
+To create a map, we will follow a few steps outlined in the [geemap getting started page](https://geemap.org/get-started/#add-earth-engine-data), modifying it for our use case:
+
+1. Initialize a map with a starting position and zoom level. This map will serve as our base, and we will add layers to it.
+1. Select one image from our image collection.
+1. Add the selected image to the map.
+1. Add a boundary of the Netherlands to the same map.
+
+
+#### Initialize the map 
+
+By following these steps, we will create a map visualization of the selected image.
+
+```{r, engine = 'Python', eval=FALSE}
+# set our initial zoom position for the netherlands
+center_lon = 51.962589
+center_lat = 5.669627
+zoomlevel = 8
+
+# The following line will initialize the map
+Map = geemap.Map(center=[center_lon, center_lat], zoom=zoomlevel)
+
+# The following line will actually call and show the map:
+Map
+```
+
+The map will stay and remain in this window unless we instruct it otherwise. It is an interactive map with 1 standard basemap at the moment. To start over, you can call `Map.clear()`, which will remove all layers and other objects from the map, requiring you to initialize it again. Sometimes, when working with an interactive widget like this map, Jupyter might become unresponsive. If you no longer receive any response (you can test this by running `1 + 1` in a new code block), you might need to restart the kernel and begin again.
+
+
+#### Select 1 image and add it to the map 
+
+Step 1 is complete! The next step is to select one image from the image collection and add it to the map.
+
+```{r, engine = 'Python', eval=FALSE}
+# Initial date of interest (inclusive).
+from_date = '2017-01-01'
+# Final date of interest (exclusive).
+to_date = '2023-01-01'
+
+image = viirs_image_collection\
+            .filterDate(from_date, to_date)\
+            .sort("system:time_start", True)\
+            .first()
+
+visualization_params = {
+    'min': 0,
+    'max': 10,
+    'opacity': 0.5,
+    'bands': ['avg_rad']
+}
+
+Map.addLayer(ee_object = image, 
+             vis_params = visualization_params,
+             name = 'My First Image')
+```
+
+In the code snippet provided, several steps are performed to add an image to the map. In the first line the following happened:
+
+1. Filtering Images: The `viirs_image_collection` is filtered to select only the images between two specified dates using the `filterDate(from_date, to_date)` method.
+
+1. Sorting the Collection: The filtered image collection is sorted based on the `"system:time_start"` property in ascending order using the `sort("system:time_start", ascending)` method. The resulting collection is then assigned to the variable `image`.
+
+1. Selecting an image: We selected the first image out of the collection using the `first()` method. 
+
+We then define visualization parameters and add the image to the map: 
+
+1. Visualization Parameters: Visualization parameters are defined to specify how the image should be displayed on the map. This includes the desired range of values, opacity, and the specific band to visualize (`avg_rad` in this case).
+
+1. Adding the Image to the Map: The `image` is added to the map using the `AddLayer` method. This method requires the Earth Engine object (`image`), the visualization parameters, and an optional name for the layer.
+
+By following these steps, the code successfully adds the selected image to the map, great!
+
+#### Add the boundaries of the Netherlands to the map
+
+The next code will add the boundaries of the Netherlands to the map. To get the boundary data we use the `pygadm` package. `pygadm` is a dataset project from the University of Berkeley that provides administrative boundary data on multiple scales for various regions worldwide. Be careful! The returned data is not always completely correct, but it suits our purposes for now. 
+
+```{r, engine = 'Python', eval=FALSE}
+netherlands = pygadm.get_items(admin='NLD', content_level=1)
+ee_netherlands = geemap.geopandas_to_ee(netherlands)
+
+Map.addLayer(ee_object = ee_netherlands, 
+             name = 'Netherlands Boundaries')
+Map.addLayerControl()
+```
+
+Using the `get_items` function, we can obtain the boundaries at content level 1, which represent the provinces in the Netherlands. This data is retrieved in the `GeoPandas GeoDataFrame` format, which cannot be added to the map directly. However, we can utilize a convenient conversion tool provided by the `geemap` package to convert it into an Earth Engine feature. The resulting object can then be easily placed on the map.
+
+For additional examples and tools, we recommend checking out the [examples](https://github.com/gee-community/geemap/tree/master/examples/notebooks) provided by `geemap` themselves! It's worth noting that you can also [export a map to HTML](https://github.com/gee-community/geemap/blob/master/examples/notebooks/21_export_map_to_html_png.ipynb), which might be useful for your project.
+
+Take a look at these examples to further enhance your project and explore the capabilities offered by `geemap`.
+
+Great, we have now made a simple map in google earth engine. We added an image for the whole world and we imported external data and also visualized that. And it works very quick!  
+
+### Analysis in GEE 
+
+For the analysis we want to clip the imagery to the boundaries. After that we want to take the average of all the pixels per province. This will result in a single value per province per month. Schematically the steps will look like this:
+
+1. Select data: from the ImageCollection, select the band we want to do the analysis on and filter the collection to the time range we want to do the analysis on.
+1. Single image: Collapse the image collection into a single image with many bands
+1. Clip: Clip the images on the boundaries
+1. Calculate the statistics per province
+
+#### Selecting the data and collapsing it
+
+The first step can be done in one line. Several times we call a method on an image collection, which will result in an image collection. On this collection we will call another method and so fort. Look at the following line of code and try to understand what is happening before you read the explanation. Use the documentation!
+
+```{r, engine = 'Python', eval=FALSE}
+viirs_image = viirs_image_collection.select('avg_rad') \
+                .filterDate(from_date, to_date) \
+                .toBands() 
+```
+
+4 methods are called in one line. In this code we go from an image collection over all available time steps to a single image of the time we are interested in, with one band representing an image per month. Why we collapse it into this single image will become clear in the next step. The separate methods are described below.
+1. First, we select the band we are interested in, the `avg_rad` band, containing the avarage nighttime radiation per month. For this we use the [`select`](https://developers.google.com/earth-engine/apidocs/ee-imagecollection-select) method. 
+1. We then select the images from the dates we are interested in using the [`filterDate`](https://developers.google.com/earth-engine/apidocs/ee-imagecollection-filterdate) method. 
+1. Finally we call the [`toBands`](https://developers.google.com/earth-engine/apidocs/ee-imagecollection-tobands) method. Note that this method results in an *`Image`*  instead of an *`ImageCollection`*. 
+
+When you run the code above note that the code is run instantly, no matter the processing power of your laptop or virtual machine, while actually it is quite a large computation. How can this be? Actually the code and the calculation is not done on your computer, in fact there is no computing done at all yet for this code. This code creates an API Call, which will be sent to the Earth Engine cloud platform once it needs to be called. For example when you now call the `viirs_image` variable, it takes longer. The API call is sent and the results are returned to your environment.
+
+```{r, engine = 'Python', eval=FALSE}
+viirs_image
+```
+
+#### Clipping the data
+
+Next, we will clip the image to the desired area, the boundary of the Netherlands. This can be done by using the [`clip`](https://developers.google.com/earth-engine/apidocs/ee-image-clip) method. We could have also added this to the already long line of code above. Functionally, this makes no difference. The decision on how to do this is personal; every programmer might do it differently. The most important aspect of this choice is to make it clear for yourself and others what each line is doing and to define clear variable names.
+
+```{r, engine = 'Python', eval=FALSE}
+# Function to clip an image to the specified geometry
+viirs_image_clipped = viirs_image.clip(ee_netherlands)
+```
+
+`viirs_image_clipped` now contains an image with 36 bands, verify this in your own environment. Do you understand the band names? 
+
+We now want to calculate the average per province. We do this using a *reducer*, which we apply over an area. A reducer is an algorithm which will be applied over a set of values. The set of values in our case will be the pixel values within a province. How this works in earth engine, is that we use a method called [`reduceRegions`](https://developers.google.com/earth-engine/apidocs/ee-image-reduceregions). According to the documentation this method needs as input a collection and a reducer. As input we will give the polygons of the provinces in the Netherlands: `ee_netherlands`. As reducer we have options. To see what the options are, search for `reducer` in the filter in the documentation. Since we want the average over the collection, we will use the `ee.Reducer.mean()` function, which is not a reducer itself but it *returns* a reducer. That means we will need to actually call the function in the input! We also pass give the optional parameter scale, and we set it to 300 meters. Check the documentation to understand what this parameter does. 
+
+`viirs_image_clipped` now contains an image with 36 bands. Please verify this in your own environment. 
+
+```{block, type="alert alert-success"}
+> **Question 2**: Do you understand the band names?
+```
+
+#### Calculating statistics
+
+Now, we want to calculate the average radiance per province. We can achieve this using a *reducer*, which we apply over an area. A reducer is an algorithm that is applied over a set of values. In our case, the set of values will be the pixel values within a province. We will use a method called [`reduceRegions`](https://developers.google.com/earth-engine/apidocs/ee-image-reduceregions) to gather this set of values. According to the documentation, this method requires a collection and a reducer as inputs. We will provide the polygons of the provinces in the Netherlands, referred to as `ee_netherlands`, as the input collection. As for the reducer, there are various options available. To explore the available options, you can search for `reducer` using the filter in the documentation.
+
+Since we want to take the average over the collection, we will utilize the `ee.Reducer.mean()` function. It is important to note that this function itself is not a reducer, but rather it *returns* a reducer. Therefore, we need to actually call the function as part of the input. Additionally, we provide the optional parameter `scale` with a value of 285 meters. 
+
+```{block, type="alert alert-success"}
+> **Question 3**: Why do we chooe 285 meters as scale? Find out using the documentation of the imagery and the documentation of `reduceRegions`. 
+```
+
+
+```{r, engine = 'Python', eval=FALSE}
+province_statistics = viirs_image_clipped.reduceRegions(
+    collection = ee_netherlands,
+    reducer = ee.Reducer.mean(),
+    scale = 285
+)
+```
+
+### External analysis and visualization
+
+All right! We now have a FeatureCollection with the average radiation per province, per month over the given time period. To perform analysis and visualization, our next step is to calculate the largest difference within the time period, classify this difference, and display the results on a map. While this is all possible within Earth Engine, since you are familiar with working with GeoPandas, it makes sense use what we know. Exporting the output to a GeoPandas DataFrame and continuing from there is not a problem at all, so let's do that.
+
+The steps we will follow are as follows:
+1. Export the statistics FeatureCollection to a GeoPandas DataFrame.
+1. Calculate the difference in radiation per province.
+1. Classify this difference into three classes: small difference, medium difference, and large difference.
+1. Convert the resulting DataFrame back into an Earth Engine object.
+1. Visualize the results.
+
+
+#### Exporting
+`Geemap` provides useful tools for this task. The most convenient format for us is a [GeoPandas](https://geemap.org/common/?h=ee_to_geotiff#geemap.common.ee_to_geopandas) object, but there are many other options available as well. Please refer to the documentation for additional options.
+
+```{r, engine = 'Python', eval=FALSE}
+df = geemap.ee_to_geopandas(province_statistics)
+```
+
+#### Calculating differences
+
+From here calculating the difference is straight forward, since we know (geo)pandas well. We now also have all the functionality that comes with GeoPandas, such as very easily writing the results to a geojson!
+
+```{r, engine = 'Python', eval=FALSE}
+df['diff'] = df['20170101_avg_rad'] - df['20230101_avg_rad']
+df.to_file('test.geojson', drive='GeoJSON')
+```
+
+#### Classifying and visualizing trends
+
+Now to see how the radiation behaved over time we have to do a little more work, since the dataframe in this format is not very useful for this. Read and understand the code below. 
+
+```{r, engine = 'Python', eval=FALSE}
+import pandas as pd
+import numpy as np 
+import matplotlib.pyplot as plt
+import matplotlib
+
+# Clean the dataframe a little
+clean_df = df.drop(['GID_0', 'GID_1', 'ISO_1', 'HASC_1', 'NAME_0', 'NL_NAME_1', 'VARNAME_1', 'TYPE_1','CC_1', 'ENGTYPE_1'], axis=1)
+
+# Reformat the dataframe so the rows depict measurements per timestamp per province, instead of an attribute per timestamp
+melted_df = pd.melt(clean_df, id_vars=['NAME_1', 'geometry', 'diff'] , var_name='date', value_name='value')
+
+# Convert the time string to a datetime format
+melted_df['short_date'] = melted_df['date'].str[:8].str.strip()
+melted_df['datetime'] = pd.to_datetime(melted_df['short_date'], format="%Y%m%d")
+
+
+# Initialize the plot
+fig, ax = plt.subplots(figsize=(9, 6))
+
+# Create an empty list to save all lines in for the legend 
+lines = []
+
+# For each province, add a line with a different color 
+for prov in melted_df['NAME_1'].unique():    
+    
+    # Create a dataframe for the province of interest
+    d = melted_df[melted_df['NAME_1'] == prov]
+    
+    # Generate a random color
+    random_rgb_values = list(np.random.random(3))
+    random_color = matplotlib.colors.rgb2hex(random_rgb_values, keep_alpha=False)
+    
+    # Add a line for each province
+    lines += ax.plot( d["datetime"].values, d["value"].values, color= random_color, lw=1, zorder=10, label=prov)
+    
+    
+# Add the legend    
+ax.legend(handles = lines)
+```
+
+We can see that there are some differences per province, but that there does not seem to a nationwide trend. We can also see that in the summer there is no data for the Netherlands, or in fact for entire northern europe. This has to do with the nights being so long here in the summer. Per province there might be a larger difference. To find out, we can add a trendline to the graph, but this is out of scope for this tutorial. 
+
+#### Classify differences
+For the visualization we now want to categorize the differences in 3 classes, a little difference, medium difference and a large difference. To do this we will use a numpy function called `linspace` and a pandas function called `cut`. This results in an array with datatype `CategorizalClasses`, which earth engine does not understand so we convert it to a string. 
+
+```{r, engine = 'Python', eval=FALSE}
+# Create 3 classes
+breaks = np.linspace(df['diff'].min() - 0.0001, df['diff'].max(), 4)
+
+# Assign values to classes
+classes = ['Low', 'Mid', 'High']
+df['class'] = pd.cut(df['diff'], bins=breaks, labels=classes, right=True)
+
+# Convert the datatype to strings so earth engine understands
+df['class'] = df['class'].astype('str')
+```
+
+#### Show results on a map
+
+So the next step is to show the differences on an earth engine map. To do this, we have to convert the geopandas dataframe back to a earth engine object. Before we do this we have to tell geopandas what coordinate refrence system the geometries are in. Strangely the coordinate system is not exported from earth engine, but it does need it to be assigned to be imported... 
+
+```{r, engine = 'Python', eval=FALSE}
+df = df.set_crs(4326)
+new_ee_statistics = geemap.geopandas_to_ee(df)
+
+# If you run the entire tutorial in one go, the map will show at the same location as it was first initialized.
+# To show it hear, clear the map and create a new one. 
+# If the map was not initizalized before, this line will throw an error. 
+Map.clear()
+```
+
+#### Style the map
+
+Now we have the polygons back in the right format with the classes. To visualize we define a palette, which tells earth engine which color we will give to each class. For the legend we can use this dictionary directly. Of course we also want to add the latest night time imagery behind it and we want to add a layer control. 
+
+```{r, engine = 'Python', eval=FALSE}
+Map = geemap.Map(zoomlevel=8)
+
+palette = {
+    'High': 'B81D13', # red
+    'Mid': 'EFB700',  # yellow
+    'Low': '008450'   # green
+}
+
+
+visualization_params = {
+    'min': 0,
+    'max': 10,
+    'opacity': 0.7,
+    'bands': ['20230101_avg_rad']
+}
+
+Map.addLayer(ee_object = viirs_image_clipped, 
+             vis_params = visualization_params,
+             name = 'Night Time')
+
+Map.add_styled_vector(new_ee_statistics, column="class", palette=palette, layer_name="Styled vector")
+Map.center_object(new_ee_statistics)
+
+Map.add_legend(legend_title="Legend", legend_dict=palette, position = 'topright')
+
+Map.addLayerControl()
+
+Map
+```
+
+## Conclusion
+
+That marks the end of todays tutorial. Today you learned about many different things. We began with an introduction about object oriented programming. We have learned what objects are with methods and properties and how these can be inherited from other classes. We did this so we understand JavaScript a little better and we can now understand the documentation of the Earth Engine API better. 
+
+We then used the Python implementation of this API to create maps in Earth Engine and we did some analysis about light radiation in the Netherlands. We exported and imported earth engine objects to other formats we can easier work with, so we can use the tools we know in combination with the power offered by Google Earth Engine. 
+
