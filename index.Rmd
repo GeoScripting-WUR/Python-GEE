@@ -1,10 +1,10 @@
 ---
-pagetitle: "Tutorial ??: Google Earth and in Python"
+pagetitle: "Tutorial 11: Google Earth and in Python"
 author: "Arno Timmer"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   knitrBootstrap::bootstrap_document:
-    title: "Tutorial ??: Google Earth and in Python"
+    title: "Tutorial 11: Google Earth and in Python"
     theme: "simplex"
     highlight: Tomorrow Night Bright
     menu: FALSE
