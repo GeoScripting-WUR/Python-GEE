@@ -3,21 +3,33 @@ pagetitle: "Tutorial 11: Google Earth and in Python"
 author: "Arno Timmer"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  knitrBootstrap::bootstrap_document:
+  rmdformats::html_clean:
     title: "Tutorial 11: Google Earth and in Python"
     theme: "simplex"
-    highlight: Tomorrow Night Bright
+    highlight: zenburn
     menu: FALSE
     theme.chooser: TRUE
     highlight.chooser: TRUE
 ---
 
-<style type="text/css">
-body {max-width: none;}
-a:visited {color: #91170a;}
-</style>
+```{css, echo=FALSE}
+@import url("https://netdna.bootstrapcdn.com/bootswatch/3.0.0/simplex/bootstrap.min.css");
+.main-container {max-width: none;}
+pre {color: inherit; background-color: inherit;}
+code[class^="sourceCode"]::before {
+  content: attr(class);
+  display: block;
+  text-align: right;
+  font-size: 70%;
+}
+code[class^="sourceCode r"]::before { content: "R Source";}
+code[class^="sourceCode python"]::before { content: "Python Source"; }
+code[class^="sourceCode bash"]::before { content: "Bash Source"; }
+```
 
-# Python and Google Earth Engine
+<font size="6">[WUR Geoscripting](https://geoscripting-wur.github.io/)</font> <img src="https://www.wur.nl/upload/854757ab-168f-46d7-b415-f8b501eebaa5_WUR_RGB_standard_2021-site.svg" alt="WUR logo" style="height: 35px; margin:inherit;"/>
+
+# Tutorial 11: Python and Google Earth Engine
 
 
 ```{block, type="alert alert-danger"}
@@ -34,11 +46,11 @@ We recommend using Jupyter Notebook to run the code in this tutorial. The code t
 
 ### Learning goals for today: 
 
-- Get introduced to object oriented programming and learn to read javascript documentation
-- Visualize raster and vector data using the google earth engine in python
-- Use the python api for earth engine for doing geospatial analysis. 
+- Be able to read javascript documentation
+- Visualize raster and vector data using Google Earth Engine in python
+- Use the python api for Google Earth Engine for doing spatial analysis
 
-Many of you may already be familiar with or have explored Google Earth (https://earth.google.com/web/). Within Google Earth, you can virtually explore the Earth from your computer. The application offers various maps and information, including the familiar Google Maps base map and additional layers such as the age of the sea floor. Moreover, Google Earth (or more accurately, its "engine") serves as a powerful cloud-based computational platform for geospatial analysis. It provides a wealth of information and tools that are accessible to everyone (with a Google account). 
+You may already be familiar with or have explored Google Earth (https://earth.google.com/web/). Within Google Earth, you can virtually explore the Earth from your computer. The application offers various maps and information, including the familiar Google Maps base map and additional layers such as the age of the sea floor. Behind Google Earth lies it's engine. It is a powerful cloud-based computational platform that can be used for analyzing all data available in Google Earth and more. It provides a wealth of information and tools that are accessible to everyone with a Google account. 
 
 ## Javascript, API's and Object Oriented Programming
 
@@ -49,94 +61,6 @@ An API stands for "Application Programming Interface" and serves as a standardiz
 
 ### JavaScript
 JavaScript (JS) is a widely used programming language primarily employed for web development. It follows an object-oriented programming (OOP) paradigm, which emphasizes creating reusable code through objects. Objects in JS can encapsulate both data (properties) and functionality (methods) within a single entity. OOP differs somewhat from the programming style we have used thus far, although Python can also be used as an OOP language. Working with the GEE Python API offers a fantastic opportunity to become familiar with object-oriented programming while leveraging the immense power of Google's engine.
-
-### Object-Oriented Programming in Python
-
-In this tutorial, we will learn how to interact with GEE. However, before we dive into that, it's essential to understand the principles of Object-Oriented Programming (OOP) and how it is implemented in Python.
-
-In Python, objects are created and manipulated using classes. A class serves as a blueprint that defines the structure and behavior of objects. It brings together data (properties) and functions (methods) into a single object.
-
-To define a class in Python, we use the `class` keyword, followed by the name of the class. Let's take a look at an example of a simple class called `Person`:
-
-```{r, engine = 'Python', eval=FALSE}
-class Person:
-    def __init__(self, name, age):
-        self.name = name  # < this is a property
-        self.age = age    # < this is also a property
-    
-    def greet(self):  # < This "function" is a method
-        print(f"Hello, my name is {self.name} and I'm {self.age} years old.")
-```
-
-In the provided code, the `__init__` method is a special method known as a *constructor*. It is automatically invoked when an object is created from the class. The `self` parameter refers to the instance of the class itself, allowing access to its properties and methods. Whenever a method is defined within a class, we give `self` as the first parameter. 
-
-The `Person` class has two properties, `name` and `age`, as well as one method, `greet`. The `greet` method prints a greeting message that includes the person's name and age.
-
-To create an instance of the `Person` class, you simply call the class as if it were a function and assign the result to a variable:
-
-```{r, engine = 'Python', eval=FALSE}
-person1 = Person("Alice", 25)
-person2 = Person("Bob", 30)
-```
-
-We have created two objects, `person1` and `person2`, which are instances of the `Person` class. Now we can access the properties and call the methods of these objects:
-
-```{r, engine = 'Python', eval=FALSE}
-print(person1.name)  # Output: Alice
-print(person2.age)   # Output: 30
-person1.greet()      # Output: Hello, my name is Alice and I'm 25 years old.
-person2.greet()      # Output: Hello, my name is Bob and I'm 30 years old.
-```
-
-This example is straightforward, but keep in mind that classes can become more complex. 
-
-```{block, type="alert alert-success"}
-> **Question 1**: Take a look at the creation of a GeoPandas `GeoSeries` [here](https://github.com/geopandas/geopandas/blob/main/geopandas/geoseries.py). It may seem complicated and hard to read, but it is well-documented, so try to understand some of its functionality. The `to_json` method, for example, provides straightforward functionality (though it may still be challenging to read due to its complexity).
-```
-
-
-You may have noticed that class definitions differ from what we have learned. In the GeoPandas example, the class is defined as follows:
-
-```{r, engine = 'Python', eval=FALSE}
-class GeoSeries(GeoPandasBase, Series):
-```
-
-However, we previously learned to define a class like this:
-
-```{r, engine = 'Python', eval=FALSE}
-class GeoSeries:
-```
-
-The difference lies in the code within the parentheses, which represents *inheritance*. The class will inherit all the functionality from the classes specified as arguments, in this case, `GeoPandasBase` and `Series`. The `Series` object refers to the [Pandas.Series](https://github.com/pandas-dev/pandas/blob/main/pandas/core/series.py#L243C15-L243C15), which contains thousands of lines of code with various functionalities. Therefore, the GeoPandas `GeoSeries` contains all the functionalities implemented in Pandas, as well as those from `GeoPandasBase` and `GeoPandas.Series` itself.
-
-Phew, that's a lot of complicated code, and it may seem overwhelming. You don't need to understand every detail. The important thing is to grasp the value of classes, objects, and inheritance. How does this work in a simple example?
-
-So, we've learned that with inheritance, classes can acquire all the functionality from other classes and build upon that. Let's create a new object called `Student`, which will inherit all the properties and methods from the `Person` class we created earlier.
-
-```{r, engine = 'Python', eval=FALSE}
-class Student(Person):
-    def __init__(self, name, age, student_id):
-        super().__init__(name, age)
-        self.student_id = student_id
-    
-    def study(self):
-        print(f"{self.name} is studying.")
-
-```
-
-In the provided code, the `Student` class inherits from the `Person` class, which we will refer to as the superclass. By doing so, it extends the functionality of the superclass by adding a new property (`student_id`) and a new method (`study`). The `super()` function is used to call the superclass's `__init__` method, allowing the subclass to initialize the inherited properties.
-
-As a result, the `Student` class contains both the methods and properties inherited from the `Person` class, as well as the additional ones defined within the `Student` class:
-
-```{r, engine = 'Python', eval=FALSE}
-student = Student("Eve", 22, "123456")
-print(student.name)         # Output: Eve
-print(student.student_id)   # Output: 123456
-student.greet()             # Output: Hello, my name is Eve and I'm 22 years old.
-student.study()             # Output: Eve is studying.
-```
-
-In this example, `student` is an instance of the `Student` class. It can access the inherited properties from the `Person` class, such as `name`, as well as the newly added property `student_id`. Similarly, it can invoke both the inherited method `greet` and the additional method `study`, which are specific to the `Student` class.
 
 ## Google Earth Engine
 
@@ -425,7 +349,7 @@ We now want to calculate the average per province. We do this using a *reducer*,
 `viirs_image_clipped` now contains an image with 36 bands. Please verify this in your own environment. 
 
 ```{block, type="alert alert-success"}
-> **Question 2**: Do you understand the band names?
+> **Question 1**: Do you understand the band names?
 ```
 
 #### Calculating statistics
@@ -435,7 +359,7 @@ Now, we want to calculate the average radiance per province. We can achieve this
 Since we want to take the average over the collection, we will utilize the `ee.Reducer.mean()` function. It is important to note that this function itself is not a reducer, but rather it *returns* a reducer. Therefore, we need to actually call the function as part of the input. Additionally, we provide the optional parameter `scale` with a value of 285 meters. 
 
 ```{block, type="alert alert-success"}
-> **Question 3**: Why do we chooe 285 meters as scale? Find out using the documentation of the imagery and the documentation of `reduceRegions`. 
+> **Question 2**: Why do we chooe 285 meters as scale? Find out using the documentation of the imagery and the documentation of `reduceRegions`. 
 ```
 
 
@@ -588,7 +512,5 @@ Map
 
 ## Conclusion
 
-That marks the end of todays tutorial. Today you learned about many different things. We began with an introduction about object oriented programming. We have learned what objects are with methods and properties and how these can be inherited from other classes. We did this so we understand JavaScript a little better and we can now understand the documentation of the Earth Engine API better. 
-
-We then used the Python implementation of this API to create maps in Earth Engine and we did some analysis about light radiation in the Netherlands. We exported and imported earth engine objects to other formats we can easier work with, so we can use the tools we know in combination with the power offered by Google Earth Engine. 
+That marks the end of todays tutorial. Today you learned about many different things. We started with understanding JavaScript a little better and we can now read the documentation of the Earth Engine API, to apply the functionality in Python. We then used the Python implementation of this API to create maps in Earth Engine and we did some analysis about light radiation in the Netherlands. We exported and imported earth engine objects to other formats we can easier work with, so we can use the tools we know in combination with the power offered by Google Earth Engine. 
 
