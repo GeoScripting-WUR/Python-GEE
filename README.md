@@ -9,3 +9,4 @@ Tutorial learning goals:
   - Be able to read and understand JavaScript documentation, in this tutorial used for implementing 
   in Python
   - Learn how to work with Google Earth Engine in Python and execute raster analysis
+  
