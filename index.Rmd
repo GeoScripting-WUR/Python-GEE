@@ -35,7 +35,7 @@ code[class^="sourceCode bash"]::before { content: "Bash Source"; }
 ```{block, type="alert alert-danger"}
 
 **A note on running this tutorial**
-
+ 
 
 We recommend using Jupyter Notebook to run the code in this tutorial. The code today makes use of interactive widgets, which will display inline when Jupyter Notebooks. You can run the code in an IDE like Spyder, but where the variable `Map` is called, you will have to export the map and look at the exported html in for example a browser. To export the map to html you can use the following code: 
 
