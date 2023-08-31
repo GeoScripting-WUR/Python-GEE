@@ -11,3 +11,4 @@ Tutorial learning goals:
   - Learn how to work with Google Earth Engine in Python and execute raster analysis
 
 The jupyter notebook and the resulting html (both called python-gee) are for development purposes. The index.Rmd and index.html are the tutorials meant for on the geoscripting website.
+

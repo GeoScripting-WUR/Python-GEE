@@ -37,7 +37,7 @@ code[class^="sourceCode bash"]::before { content: "Bash Source"; }
 **A note on running this tutorial**
  
 
-We recommend using Jupyter Notebook to run the code in this tutorial. The code today makes use of interactive widgets, which will display inline when Jupyter Notebooks. You can run the code in an IDE like Spyder, but where the variable `Map` is called, you will have to export the map and look at it in html using the following code: 
+We recommend using Jupyter Notebook to run the code in this tutorial. The code today makes use of interactive widgets, which will display inline when Jupyter Notebooks. You can run the code in an IDE like Spyder, but where the variable `Map` is called, you will have to export the map and look at the exported html in for example a browser. To export the map to html you can use the following code: 
 
 
 `Map.to_html(filename='map.html', title='My Map', width='100%', height='880px')`
@@ -287,9 +287,16 @@ By following these steps, the code successfully adds the selected image to the m
 The next code will add the boundaries of the Netherlands to the map. To get the boundary data we use the `pygadm` package. `pygadm` is a dataset project from the University of Berkeley that provides administrative boundary data on multiple scales for various regions worldwide. Be careful! The returned data is not always completely correct, but it suits our purposes for now. 
 
 ```{r, engine = 'Python', eval=FALSE}
+# Get data
 netherlands = pygadm.get_items(admin='NLD', content_level=1)
+
+# Define the projection
+netherlands.crs = "EPSG:4326"
+
+# Export to geopandas
 ee_netherlands = geemap.geopandas_to_ee(netherlands)
 
+# Add data to map
 Map.addLayer(ee_object = ee_netherlands, 
              name = 'Netherlands Boundaries')
 Map.addLayerControl()
@@ -384,11 +391,14 @@ The steps we will follow are as follows:
 
 
 #### Exporting
-`Geemap` provides useful tools for this task. The most convenient format for us is a [GeoPandas](https://geemap.org/common/?h=ee_to_geotiff#geemap.common.ee_to_geopandas) object, but there are many other options available as well. Please refer to the documentation for additional options.
+`Geemap` provides useful tools for exporting data. The most convenient format for us is a [GeoPandas](https://geemap.org/common/?h=ee_to_geotiff#geemap.common.ee_to_geopandas) object, but there are many other options available as well. Please refer to the documentation for additional options.
 
 ```{r, engine = 'Python', eval=FALSE}
 df = geemap.ee_to_geopandas(province_statistics)
 ```
+
+It is, obviously, also possible to export other earth engine objects like images or image collections, as is shown [in the documentation](https://geemap.org/notebooks/11_export_image). At the end of this tutorial we will show how to export the data used in this tutorial to a geotiff file. 
+
 
 #### Calculating differences
 
@@ -509,6 +519,47 @@ Map.addLayerControl()
 
 Map
 ```
+
+### Exporting rasters
+
+#### To file 
+As promised earlier in this tutorial we will show how to export raster data to a local file for visualization or analysis outside of GEE. We will use the tools as described in the [geemap tutorials](https://geemap.org/notebooks/11_export_image). Before we export an image we have to get some data from GEE. We will use the same ata as used in the rest of the tutorial. 
+
+```{r, engine = 'Python', eval=FALSE}
+# Initial date of interest (inclusive).
+from_date = '2017-01-01'
+# Final date of interest (exclusive).
+to_date = '2023-01-01'
+
+image = viirs_image_collection\
+            .filterDate(from_date, to_date)\
+            .sort("system:time_start", True)\
+            .first() 
+
+# Get geometry data and convert to earth engine object
+netherlands = pygadm.get_items(admin='NLD', content_level=1)
+netherlands.crs = "EPSG:4326"
+ee_netherlands = geemap.geopandas_to_ee(netherlands)
+
+```
+
+After collecting the data we can use a simple command for downloading the data. In this case the image we are working with consists of two bands. Setting the `file_per_band` parameter to `True` will result in a file for each of the bands. 
+
+```{r, engine = 'Python', eval=FALSE}
+
+# Export to geotiff
+geemap.ee_export_image(image, 
+                       filename='clipped_image.tif', 
+                       region=ee_netherlands.geometry(), 
+                       scale=285,
+                       file_per_band=True
+                       )
+```
+
+#### To python
+
+For further analysis within python it might be easier to convert a raster to a `numpy.array`. This [stackexchange question and answer](https://gis.stackexchange.com/questions/350771/moving-from-earth-engine-image-to-array-for-use-in-sklearn) by Justin Braaten shows nicely how this can be done. Notice that for further spatial analysis this might be inconvenient, since the resulting numpy array contains only the pixel values, without any spatial information. When importing to, for example, rasterio we need additional sptial information such as the origin (north west corner) and the pixel size, however. For more information see also this [stackexchange thread](https://gis.stackexchange.com/questions/279953/numpy-array-to-gtiff-using-rasterio-without-source-raster)
+
 
 ## Conclusion
 
