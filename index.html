@@ -911,7 +911,7 @@ font-weight: bold;
 
       <!-- html_clean authors -->
          <h4 class="author"><em>Arno Timmer</em></h4>
-            <h4 class="date"><em>20 juli, 2023</em></h4>
+            <h4 class="date"><em>31 augustus, 2023</em></h4>
       
       
    
@@ -945,7 +945,8 @@ We recommend using Jupyter Notebook to run the code in this tutorial.
 The code today makes use of interactive widgets, which will display
 inline when Jupyter Notebooks. You can run the code in an IDE like
 Spyder, but where the variable <code>Map</code> is called, you will have
-to export the map and look at it in html using the following code:
+to export the map and look at the exported html in for example a
+browser. To export the map to html you can use the following code:
 </p>
 <p>
 <code>Map.to_html(filename=‘map.html’, title=‘My Map’, width=‘100%’,
@@ -1278,12 +1279,19 @@ To get the boundary data we use the <code>pygadm</code> package.
 that provides administrative boundary data on multiple scales for
 various regions worldwide. Be careful! The returned data is not always
 completely correct, but it suits our purposes for now.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>netherlands <span class="op">=</span> pygadm.get_items(admin<span class="op">=</span><span class="st">&#39;NLD&#39;</span>, content_level<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>ee_netherlands <span class="op">=</span> geemap.geopandas_to_ee(netherlands)</span>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get data</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>netherlands <span class="op">=</span> pygadm.get_items(admin<span class="op">=</span><span class="st">&#39;NLD&#39;</span>, content_level<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>Map.addLayer(ee_object <span class="op">=</span> ee_netherlands, </span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>             name <span class="op">=</span> <span class="st">&#39;Netherlands Boundaries&#39;</span>)</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>Map.addLayerControl()</span></code></pre></div>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the projection</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>netherlands.crs <span class="op">=</span> <span class="st">&quot;EPSG:4326&quot;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Export to geopandas</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>ee_netherlands <span class="op">=</span> geemap.geopandas_to_ee(netherlands)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Add data to map</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>Map.addLayer(ee_object <span class="op">=</span> ee_netherlands, </span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>             name <span class="op">=</span> <span class="st">&#39;Netherlands Boundaries&#39;</span>)</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>Map.addLayerControl()</span></code></pre></div>
 <p>Using the <code>get_items</code> function, we can obtain the
 boundaries at content level 1, which represent the provinces in the
 Netherlands. This data is retrieved in the
@@ -1444,11 +1452,15 @@ Convert the resulting DataFrame back into an Earth Engine object. 1.
 Visualize the results.</p>
 <div id="exporting" class="section level4">
 <h4>Exporting</h4>
-<p><code>Geemap</code> provides useful tools for this task. The most
-convenient format for us is a <a href="https://geemap.org/common/?h=ee_to_geotiff#geemap.common.ee_to_geopandas">GeoPandas</a>
+<p><code>Geemap</code> provides useful tools for exporting data. The
+most convenient format for us is a <a href="https://geemap.org/common/?h=ee_to_geotiff#geemap.common.ee_to_geopandas">GeoPandas</a>
 object, but there are many other options available as well. Please refer
 to the documentation for additional options.</p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> geemap.ee_to_geopandas(province_statistics)</span></code></pre></div>
+<p>It is, obviously, also possible to export other earth engine objects
+like images or image collections, as is shown <a href="https://geemap.org/notebooks/11_export_image">in the
+documentation</a>. At the end of this tutorial we will show how to
+export the data used in this tutorial to a geotiff file.</p>
 </div>
 <div id="calculating-differences" class="section level4">
 <h4>Calculating differences</h4>
@@ -1579,6 +1591,56 @@ behind it and we want to add a layer control.</p>
 <span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>Map.addLayerControl()</span>
 <span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>Map</span></code></pre></div>
+</div>
+</div>
+<div id="exporting-rasters" class="section level3">
+<h3>Exporting rasters</h3>
+<div id="to-file" class="section level4">
+<h4>To file</h4>
+<p>As promised earlier in this tutorial we will show how to export
+raster data to a local file for visualization or analysis outside of
+GEE. We will use the tools as described in the <a href="https://geemap.org/notebooks/11_export_image">geemap
+tutorials</a>. Before we export an image we have to get some data from
+GEE. We will use the same ata as used in the rest of the tutorial.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Initial date of interest (inclusive).</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>from_date <span class="op">=</span> <span class="st">&#39;2017-01-01&#39;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Final date of interest (exclusive).</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>to_date <span class="op">=</span> <span class="st">&#39;2023-01-01&#39;</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>image <span class="op">=</span> viirs_image_collection<span class="op">\</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>            .filterDate(from_date, to_date)<span class="op">\</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>            .sort(<span class="st">&quot;system:time_start&quot;</span>, <span class="va">True</span>)<span class="op">\</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>            .first() </span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Get geometry data and convert to earth engine object</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>netherlands <span class="op">=</span> pygadm.get_items(admin<span class="op">=</span><span class="st">&#39;NLD&#39;</span>, content_level<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>netherlands.crs <span class="op">=</span> <span class="st">&quot;EPSG:4326&quot;</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>ee_netherlands <span class="op">=</span> geemap.geopandas_to_ee(netherlands)</span></code></pre></div>
+<p>After collecting the data we can use a simple command for downloading
+the data. In this case the image we are working with consists of two
+bands. Setting the <code>file_per_band</code> parameter to
+<code>True</code> will result in a file for each of the bands.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Export to geotiff</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>geemap.ee_export_image(image, </span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>                       filename<span class="op">=</span><span class="st">&#39;clipped_image.tif&#39;</span>, </span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>                       region<span class="op">=</span>ee_netherlands.geometry(), </span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>                       scale<span class="op">=</span><span class="dv">285</span>,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>                       file_per_band<span class="op">=</span><span class="va">True</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>                       )</span></code></pre></div>
+</div>
+<div id="to-python" class="section level4">
+<h4>To python</h4>
+<p>For further analysis within python it might be easier to convert a
+raster to a <code>numpy.array</code>. This <a href="https://gis.stackexchange.com/questions/350771/moving-from-earth-engine-image-to-array-for-use-in-sklearn">stackexchange
+question and answer</a> by Justin Braaten shows nicely how this can be
+done. Notice that for further spatial analysis this might be
+inconvenient, since the resulting numpy array contains only the pixel
+values, without any spatial information. When importing to, for example,
+rasterio we need additional sptial information such as the origin (north
+west corner) and the pixel size, however. For more information see also
+this <a href="https://gis.stackexchange.com/questions/279953/numpy-array-to-gtiff-using-rasterio-without-source-raster">stackexchange
+thread</a></p>
 </div>
 </div>
 </div>
