@@ -81,7 +81,7 @@ The analysis we will perform involves comparing the amount of light emitted at n
 
 To set up the required environment, you will need the following dependencies. Save the following YAML code in a new file named `env.yaml` and create and activate the environment using mamba 
 
-```{r, engine = 'yaml', eval=FALSE}
+```{yaml, eval=FALSE}
 name: pythonGee
 channels:
   - conda-forge
@@ -97,7 +97,7 @@ dependencies:
 
 To test the environment, try importing the following packages:
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 import ee
 import geemap 
 import pygadm
@@ -114,13 +114,13 @@ To work with Google Earth Engine (GEE), you will need a Google account for autho
 1. On the authorization page, select all the checkboxes. This grants permission to access GEE data and manage data and permissions in the cloud storage where the analysis will be performed.
 1. Finally, you will see an authorization code. Copy the code and paste it into the text box that appears after running the `Authenticate` function. Press Enter to complete the authentication process.
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 ee.Authenticate()
 ```
 
 You now have (hopefully) succesfully authenticated. Next we have to initialize using the `Initialize()` method: 
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 ee.Initialize()
 ```
 
@@ -134,7 +134,7 @@ In the documentation we will refer to today, you will notice that there are exam
 
 Some common differences are the following. To initialize a variable, in Python you can simply type: 
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 variablename = 'value'
 ```
 
@@ -148,7 +148,7 @@ const variablename = 'value'
 
 Another often occuring difference in the documentation is how variables are passed to a function. In python we can do that as we are used to: 
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 multiStats = img.reduceRegions(
   collection=regionCol,
   reducer=reducer,
@@ -178,7 +178,7 @@ For this analysis, we will need data on emitted light. We will use the VIIRS Nig
 
 To create an `ImageCollection`, you can use the following command:
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 # Import the night time light emision data.
 viirs_image_collection = ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG")
 ```
@@ -191,13 +191,13 @@ print('Image collection from a string', ee.ImageCollection("NOAA/VIIRS/DNB/MONTH
 
 In Python, we use the following command:
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 print(ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG").getInfo()['properties'])
 ```
 
 Here, we call the `getInfo` method to convert the object information to a dictionary that we can extract useful information from. However, when working in Jupyter notebooks, we can simply call the object itself to display it inline:
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG")
 ```
 
@@ -223,7 +223,7 @@ To create a map, we will follow a few steps outlined in the [geemap getting star
 
 By following these steps, we will create a map visualization of the selected image.
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 # set our initial zoom position for the netherlands
 center_lon = 51.962589
 center_lat = 5.669627
@@ -243,7 +243,7 @@ The map will stay and remain in this window unless we instruct it otherwise. It 
 
 Step 1 is complete! The next step is to select one image from the image collection and add it to the map.
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 # Initial date of interest (inclusive).
 from_date = '2017-01-01'
 # Final date of interest (exclusive).
@@ -286,14 +286,14 @@ By following these steps, the code successfully adds the selected image to the m
 
 The next code will add the boundaries of the Netherlands to the map. To get the boundary data we use the `pygadm` package. `pygadm` is a dataset project from the University of Berkeley that provides administrative boundary data on multiple scales for various regions worldwide. Be careful! The returned data is not always completely correct, but it suits our purposes for now. 
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 # Get data
 netherlands = pygadm.get_items(admin='NLD', content_level=1)
 
 # Define the projection
 netherlands.crs = "EPSG:4326"
 
-# Export to geopandas
+# Import gpd dataframe to earth engine
 ee_netherlands = geemap.geopandas_to_ee(netherlands)
 
 # Add data to map
@@ -323,20 +323,21 @@ For the analysis we want to clip the imagery to the boundaries. After that we wa
 
 The first step can be done in one line. Several times we call a method on an image collection, which will result in an image collection. On this collection we will call another method and so fort. Look at the following line of code and try to understand what is happening before you read the explanation. Use the documentation!
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 viirs_image = viirs_image_collection.select('avg_rad') \
                 .filterDate(from_date, to_date) \
                 .toBands() 
 ```
 
 4 methods are called in one line. In this code we go from an image collection over all available time steps to a single image of the time we are interested in, with one band representing an image per month. Why we collapse it into this single image will become clear in the next step. The separate methods are described below.
-1. First, we select the band we are interested in, the `avg_rad` band, containing the avarage nighttime radiation per month. For this we use the [`select`](https://developers.google.com/earth-engine/apidocs/ee-imagecollection-select) method. 
-1. We then select the images from the dates we are interested in using the [`filterDate`](https://developers.google.com/earth-engine/apidocs/ee-imagecollection-filterdate) method. 
-1. Finally we call the [`toBands`](https://developers.google.com/earth-engine/apidocs/ee-imagecollection-tobands) method. Note that this method results in an *`Image`*  instead of an *`ImageCollection`*. 
+
+  1. First, we select the band we are interested in, the `avg_rad` band, containing the average nighttime radiation per month. For this we use the [`select`](https://developers.google.com/earth-engine/apidocs/ee-imagecollection-select) method.
+  2. We then select the images from the dates we are interested in using the [`filterDate`](https://developers.google.com/earth-engine/apidocs/ee-imagecollection-filterdate) method.
+  3. Finally we call the [`toBands`](https://developers.google.com/earth-engine/apidocs/ee-imagecollection-tobands) method. Note that this method results in an *`Image`*  instead of an *`ImageCollection`*.
 
 When you run the code above note that the code is run instantly, no matter the processing power of your laptop or virtual machine, while actually it is quite a large computation. How can this be? Actually the code and the calculation is not done on your computer, in fact there is no computing done at all yet for this code. This code creates an API Call, which will be sent to the Earth Engine cloud platform once it needs to be called. For example when you now call the `viirs_image` variable, it takes longer. The API call is sent and the results are returned to your environment.
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 viirs_image
 ```
 
@@ -344,16 +345,12 @@ viirs_image
 
 Next, we will clip the image to the desired area, the boundary of the Netherlands. This can be done by using the [`clip`](https://developers.google.com/earth-engine/apidocs/ee-image-clip) method. We could have also added this to the already long line of code above. Functionally, this makes no difference. The decision on how to do this is personal; every programmer might do it differently. The most important aspect of this choice is to make it clear for yourself and others what each line is doing and to define clear variable names.
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 # Function to clip an image to the specified geometry
 viirs_image_clipped = viirs_image.clip(ee_netherlands)
 ```
 
-`viirs_image_clipped` now contains an image with 36 bands, verify this in your own environment. Do you understand the band names? 
-
-We now want to calculate the average per province. We do this using a *reducer*, which we apply over an area. A reducer is an algorithm which will be applied over a set of values. The set of values in our case will be the pixel values within a province. How this works in earth engine, is that we use a method called [`reduceRegions`](https://developers.google.com/earth-engine/apidocs/ee-image-reduceregions). According to the documentation this method needs as input a collection and a reducer. As input we will give the polygons of the provinces in the Netherlands: `ee_netherlands`. As reducer we have options. To see what the options are, search for `reducer` in the filter in the documentation. Since we want the average over the collection, we will use the `ee.Reducer.mean()` function, which is not a reducer itself but it *returns* a reducer. That means we will need to actually call the function in the input! We also pass give the optional parameter scale, and we set it to 300 meters. Check the documentation to understand what this parameter does. 
-
-`viirs_image_clipped` now contains an image with 36 bands. Please verify this in your own environment. 
+`viirs_image_clipped` now contains an image with 72 bands. Please verify this in your own environment.
 
 ```{block, type="alert alert-success"}
 > **Question 1**: Do you understand the band names?
@@ -363,37 +360,37 @@ We now want to calculate the average per province. We do this using a *reducer*,
 
 Now, we want to calculate the average radiance per province. We can achieve this using a *reducer*, which we apply over an area. A reducer is an algorithm that is applied over a set of values. In our case, the set of values will be the pixel values within a province. We will use a method called [`reduceRegions`](https://developers.google.com/earth-engine/apidocs/ee-image-reduceregions) to gather this set of values. According to the documentation, this method requires a collection and a reducer as inputs. We will provide the polygons of the provinces in the Netherlands, referred to as `ee_netherlands`, as the input collection. As for the reducer, there are various options available. To explore the available options, you can search for `reducer` using the filter in the documentation.
 
-Since we want to take the average over the collection, we will utilize the `ee.Reducer.mean()` function. It is important to note that this function itself is not a reducer, but rather it *returns* a reducer. Therefore, we need to actually call the function as part of the input. Additionally, we provide the optional parameter `scale` with a value of 285 meters. 
+Since we want to take the average over the collection, we will utilize the `ee.Reducer.mean()` function. It is important to note that this function itself is not a reducer, but rather it *returns* a reducer. Therefore, we need to actually call the function as part of the input. Additionally, we provide the optional parameter `scale` with a value of 463.83 meters.
 
 ```{block, type="alert alert-success"}
-> **Question 2**: Why do we chooe 285 meters as scale? Find out using the documentation of the imagery and the documentation of `reduceRegions`. 
+> **Question 2**: Why do we choose 463.83 meters as scale? Find out using the documentation of the imagery and the documentation of `reduceRegions`.
 ```
 
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 province_statistics = viirs_image_clipped.reduceRegions(
     collection = ee_netherlands,
     reducer = ee.Reducer.mean(),
-    scale = 285
+    scale = 463.83
 )
 ```
 
 ### External analysis and visualization
 
-All right! We now have a FeatureCollection with the average radiation per province, per month over the given time period. To perform analysis and visualization, our next step is to calculate the largest difference within the time period, classify this difference, and display the results on a map. While this is all possible within Earth Engine, since you are familiar with working with GeoPandas, it makes sense use what we know. Exporting the output to a GeoPandas DataFrame and continuing from there is not a problem at all, so let's do that.
+All right! We now have a `FeatureCollection` with the average radiation per province, per month over the given time period. To perform analysis and visualization, our next step is to calculate the largest difference within the time period, classify this difference, and display the results on a map. While this is all possible within Earth Engine, since you are familiar with working with GeoPandas, it makes sense use what we know. Exporting the output to a GeoPandas DataFrame and continuing from there is not a problem at all, so let's do that.
 
 The steps we will follow are as follows:
 1. Export the statistics FeatureCollection to a GeoPandas DataFrame.
-1. Calculate the difference in radiation per province.
-1. Classify this difference into three classes: small difference, medium difference, and large difference.
-1. Convert the resulting DataFrame back into an Earth Engine object.
-1. Visualize the results.
+2. Calculate the difference in radiation per province.
+3. Classify this difference into three classes: small difference, medium difference, and large difference.
+4. Convert the resulting DataFrame back into an Earth Engine object.
+5. Visualize the results.
 
 
 #### Exporting
 `Geemap` provides useful tools for exporting data. The most convenient format for us is a [GeoPandas](https://geemap.org/common/?h=ee_to_geotiff#geemap.common.ee_to_geopandas) object, but there are many other options available as well. Please refer to the documentation for additional options.
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 df = geemap.ee_to_geopandas(province_statistics)
 ```
 
@@ -404,8 +401,8 @@ It is, obviously, also possible to export other earth engine objects like images
 
 From here calculating the difference is straight forward, since we know (geo)pandas well. We now also have all the functionality that comes with GeoPandas, such as very easily writing the results to a geojson!
 
-```{r, engine = 'Python', eval=FALSE}
-df['diff'] = df['20170101_avg_rad'] - df['20230101_avg_rad']
+```{python, eval=FALSE}
+df['diff'] = df['20170101_avg_rad'] - df['20221201_avg_rad']
 df.to_file('test.geojson', drive='GeoJSON')
 ```
 
@@ -413,7 +410,7 @@ df.to_file('test.geojson', drive='GeoJSON')
 
 Now to see how the radiation behaved over time we have to do a little more work, since the dataframe in this format is not very useful for this. Read and understand the code below. 
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
@@ -459,7 +456,7 @@ We can see that there are some differences per province, but that there does not
 #### Classify differences
 For the visualization we now want to categorize the differences in 3 classes, a little difference, medium difference and a large difference. To do this we will use a numpy function called `linspace` and a pandas function called `cut`. This results in an array with datatype `CategorizalClasses`, which earth engine does not understand so we convert it to a string. 
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 # Create 3 classes
 breaks = np.linspace(df['diff'].min() - 0.0001, df['diff'].max(), 4)
 
@@ -475,7 +472,7 @@ df['class'] = df['class'].astype('str')
 
 So the next step is to show the differences on an earth engine map. To do this, we have to convert the geopandas dataframe back to a earth engine object. Before we do this we have to tell geopandas what coordinate refrence system the geometries are in. Strangely the coordinate system is not exported from earth engine, but it does need it to be assigned to be imported... 
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 df = df.set_crs(4326)
 new_ee_statistics = geemap.geopandas_to_ee(df)
 
@@ -489,7 +486,7 @@ Map.clear()
 
 Now we have the polygons back in the right format with the classes. To visualize we define a palette, which tells earth engine which color we will give to each class. For the legend we can use this dictionary directly. Of course we also want to add the latest night time imagery behind it and we want to add a layer control. 
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 Map = geemap.Map(zoomlevel=8)
 
 palette = {
@@ -525,7 +522,7 @@ Map
 #### To file 
 As promised earlier in this tutorial we will show how to export raster data to a local file for visualization or analysis outside of GEE. We will use the tools as described in the [geemap tutorials](https://geemap.org/notebooks/11_export_image). Before we export an image we have to get some data from GEE. We will use the same ata as used in the rest of the tutorial. 
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 # Initial date of interest (inclusive).
 from_date = '2017-01-01'
 # Final date of interest (exclusive).
@@ -545,7 +542,7 @@ ee_netherlands = geemap.geopandas_to_ee(netherlands)
 
 After collecting the data we can use a simple command for downloading the data. In this case the image we are working with consists of two bands. Setting the `file_per_band` parameter to `True` will result in a file for each of the bands. 
 
-```{r, engine = 'Python', eval=FALSE}
+```{python, eval=FALSE}
 
 # Export to geotiff
 geemap.ee_export_image(image, 

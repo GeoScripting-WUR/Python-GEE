@@ -911,7 +911,7 @@ font-weight: bold;
 
       <!-- html_clean authors -->
          <h4 class="author"><em>Arno Timmer</em></h4>
-            <h4 class="date"><em>31 augustus, 2023</em></h4>
+            <h4 class="date"><em>03 oktober, 2023</em></h4>
       
       
    
@@ -1285,7 +1285,7 @@ completely correct, but it suits our purposes for now.</p>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the projection</span></span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>netherlands.crs <span class="op">=</span> <span class="st">&quot;EPSG:4326&quot;</span></span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Export to geopandas</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Import gpd dataframe to earth engine</span></span>
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>ee_netherlands <span class="op">=</span> geemap.geopandas_to_ee(netherlands)</span>
 <span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Add data to map</span></span>
@@ -1340,14 +1340,19 @@ you read the explanation. Use the documentation!</p>
 collection over all available time steps to a single image of the time
 we are interested in, with one band representing an image per month. Why
 we collapse it into this single image will become clear in the next
-step. The separate methods are described below. 1. First, we select the
-band we are interested in, the <code>avg_rad</code> band, containing the
-avarage nighttime radiation per month. For this we use the <a href="https://developers.google.com/earth-engine/apidocs/ee-imagecollection-select"><code>select</code></a>
-method. 1. We then select the images from the dates we are interested in
-using the <a href="https://developers.google.com/earth-engine/apidocs/ee-imagecollection-filterdate"><code>filterDate</code></a>
-method. 1. Finally we call the <a href="https://developers.google.com/earth-engine/apidocs/ee-imagecollection-tobands"><code>toBands</code></a>
+step. The separate methods are described below.</p>
+<ol style="list-style-type: decimal">
+<li>First, we select the band we are interested in, the
+<code>avg_rad</code> band, containing the average nighttime radiation
+per month. For this we use the <a href="https://developers.google.com/earth-engine/apidocs/ee-imagecollection-select"><code>select</code></a>
+method.</li>
+<li>We then select the images from the dates we are interested in using
+the <a href="https://developers.google.com/earth-engine/apidocs/ee-imagecollection-filterdate"><code>filterDate</code></a>
+method.</li>
+<li>Finally we call the <a href="https://developers.google.com/earth-engine/apidocs/ee-imagecollection-tobands"><code>toBands</code></a>
 method. Note that this method results in an <em><code>Image</code></em>
-instead of an <em><code>ImageCollection</code></em>.</p>
+instead of an <em><code>ImageCollection</code></em>.</li>
+</ol>
 <p>When you run the code above note that the code is run instantly, no
 matter the processing power of your laptop or virtual machine, while
 actually it is quite a large computation. How can this be? Actually the
@@ -1370,25 +1375,7 @@ important aspect of this choice is to make it clear for yourself and
 others what each line is doing and to define clear variable names.</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function to clip an image to the specified geometry</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>viirs_image_clipped <span class="op">=</span> viirs_image.clip(ee_netherlands)</span></code></pre></div>
-<p><code>viirs_image_clipped</code> now contains an image with 36 bands,
-verify this in your own environment. Do you understand the band
-names?</p>
-<p>We now want to calculate the average per province. We do this using a
-<em>reducer</em>, which we apply over an area. A reducer is an algorithm
-which will be applied over a set of values. The set of values in our
-case will be the pixel values within a province. How this works in earth
-engine, is that we use a method called <a href="https://developers.google.com/earth-engine/apidocs/ee-image-reduceregions"><code>reduceRegions</code></a>.
-According to the documentation this method needs as input a collection
-and a reducer. As input we will give the polygons of the provinces in
-the Netherlands: <code>ee_netherlands</code>. As reducer we have
-options. To see what the options are, search for <code>reducer</code> in
-the filter in the documentation. Since we want the average over the
-collection, we will use the <code>ee.Reducer.mean()</code> function,
-which is not a reducer itself but it <em>returns</em> a reducer. That
-means we will need to actually call the function in the input! We also
-pass give the optional parameter scale, and we set it to 300 meters.
-Check the documentation to understand what this parameter does.</p>
-<p><code>viirs_image_clipped</code> now contains an image with 36 bands.
+<p><code>viirs_image_clipped</code> now contains an image with 72 bands.
 Please verify this in your own environment.</p>
 <div class="alert alert-success">
 <blockquote>
@@ -1417,12 +1404,12 @@ utilize the <code>ee.Reducer.mean()</code> function. It is important to
 note that this function itself is not a reducer, but rather it
 <em>returns</em> a reducer. Therefore, we need to actually call the
 function as part of the input. Additionally, we provide the optional
-parameter <code>scale</code> with a value of 285 meters.</p>
+parameter <code>scale</code> with a value of 463.83 meters.</p>
 <div class="alert alert-success">
 <blockquote>
 <p>
-<strong>Question 2</strong>: Why do we chooe 285 meters as scale? Find
-out using the documentation of the imagery and the documentation of
+<strong>Question 2</strong>: Why do we choose 463.83 meters as scale?
+Find out using the documentation of the imagery and the documentation of
 <code>reduceRegions</code>.
 </p>
 </blockquote>
@@ -1430,25 +1417,25 @@ out using the documentation of the imagery and the documentation of
 <div class="sourceCode" id="cb19"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>province_statistics <span class="op">=</span> viirs_image_clipped.reduceRegions(</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    collection <span class="op">=</span> ee_netherlands,</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    reducer <span class="op">=</span> ee.Reducer.mean(),</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    scale <span class="op">=</span> <span class="dv">285</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    scale <span class="op">=</span> <span class="fl">463.83</span></span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 </div>
 <div id="external-analysis-and-visualization" class="section level3">
 <h3>External analysis and visualization</h3>
-<p>All right! We now have a FeatureCollection with the average radiation
-per province, per month over the given time period. To perform analysis
-and visualization, our next step is to calculate the largest difference
-within the time period, classify this difference, and display the
-results on a map. While this is all possible within Earth Engine, since
-you are familiar with working with GeoPandas, it makes sense use what we
-know. Exporting the output to a GeoPandas DataFrame and continuing from
-there is not a problem at all, so let’s do that.</p>
+<p>All right! We now have a <code>FeatureCollection</code> with the
+average radiation per province, per month over the given time period. To
+perform analysis and visualization, our next step is to calculate the
+largest difference within the time period, classify this difference, and
+display the results on a map. While this is all possible within Earth
+Engine, since you are familiar with working with GeoPandas, it makes
+sense use what we know. Exporting the output to a GeoPandas DataFrame
+and continuing from there is not a problem at all, so let’s do that.</p>
 <p>The steps we will follow are as follows: 1. Export the statistics
-FeatureCollection to a GeoPandas DataFrame. 1. Calculate the difference
-in radiation per province. 1. Classify this difference into three
-classes: small difference, medium difference, and large difference. 1.
-Convert the resulting DataFrame back into an Earth Engine object. 1.
+FeatureCollection to a GeoPandas DataFrame. 2. Calculate the difference
+in radiation per province. 3. Classify this difference into three
+classes: small difference, medium difference, and large difference. 4.
+Convert the resulting DataFrame back into an Earth Engine object. 5.
 Visualize the results.</p>
 <div id="exporting" class="section level4">
 <h4>Exporting</h4>
@@ -1468,7 +1455,7 @@ export the data used in this tutorial to a geotiff file.</p>
 know (geo)pandas well. We now also have all the functionality that comes
 with GeoPandas, such as very easily writing the results to a
 geojson!</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>df[<span class="st">&#39;diff&#39;</span>] <span class="op">=</span> df[<span class="st">&#39;20170101_avg_rad&#39;</span>] <span class="op">-</span> df[<span class="st">&#39;20230101_avg_rad&#39;</span>]</span>
+<div class="sourceCode" id="cb21"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>df[<span class="st">&#39;diff&#39;</span>] <span class="op">=</span> df[<span class="st">&#39;20170101_avg_rad&#39;</span>] <span class="op">-</span> df[<span class="st">&#39;20221201_avg_rad&#39;</span>]</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>df.to_file(<span class="st">&#39;test.geojson&#39;</span>, drive<span class="op">=</span><span class="st">&#39;GeoJSON&#39;</span>)</span></code></pre></div>
 </div>
 <div id="classifying-and-visualizing-trends" class="section level4">
@@ -1620,14 +1607,13 @@ GEE. We will use the same ata as used in the rest of the tutorial.</p>
 the data. In this case the image we are working with consists of two
 bands. Setting the <code>file_per_band</code> parameter to
 <code>True</code> will result in a file for each of the bands.</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Export to geotiff</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>geemap.ee_export_image(image, </span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>                       filename<span class="op">=</span><span class="st">&#39;clipped_image.tif&#39;</span>, </span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>                       region<span class="op">=</span>ee_netherlands.geometry(), </span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>                       scale<span class="op">=</span><span class="dv">285</span>,</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>                       file_per_band<span class="op">=</span><span class="va">True</span></span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>                       )</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Export to geotiff</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>geemap.ee_export_image(image, </span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>                       filename<span class="op">=</span><span class="st">&#39;clipped_image.tif&#39;</span>, </span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>                       region<span class="op">=</span>ee_netherlands.geometry(), </span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>                       scale<span class="op">=</span><span class="dv">285</span>,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>                       file_per_band<span class="op">=</span><span class="va">True</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>                       )</span></code></pre></div>
 </div>
 <div id="to-python" class="section level4">
 <h4>To python</h4>
