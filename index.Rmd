@@ -203,7 +203,9 @@ print(ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG").getInfo()['properti
 Here, we call the `getInfo` method to convert the object information to a dictionary that we can extract useful information from. However, when working in Jupyter notebooks, we can simply call the object itself to display it inline:
 
 ```{python, eval=FALSE}
-# Note: we don't recomend running this line if you are using VM Box virtual machines as they might cause it to crash, however, we still would like to show this option of getting info, as it is displayed more clearly within Jupyter Notebook.
+# Note: we don't recomend running this line if you are using VirtualBox virtual machines
+#   as they might cause it to crash, however, we still would like to show this option of getting info, 
+#   as it is displayed more clearly within Jupyter Notebook.
 # ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG")
 ```
 
@@ -360,11 +362,13 @@ viirs_image_clipped = viirs_image.clip(ee_netherlands)
 
 ```{block, type="alert alert-success"}
 > **Question 1**: Do you understand the band names?
-```
+
 <details>
   <summary>**Click for answer**</summary>
   One way of checking the amount of bands returned will be with the line `print(len(viirs_image_clipped.getInfo()['bands']))`. The naming should start with something like "20170101_avg_rad" the first part refers to the date of the image Jan 01, 2017, and the later is an abbreviation of average radiation.
 </details>
+
+```
 
 #### Calculating statistics
 
@@ -374,12 +378,13 @@ Since we want to take the average over the collection, we will utilize the `ee.R
 
 ```{block, type="alert alert-success"}
 > **Question 2**: Why do we choose 463.83 meters as scale? Find out using the documentation of the imagery and the documentation of `reduceRegions`.
-```
 
 <details>
   <summary>**Click for answer**</summary>
   In case you had trouble finding the [reduceRegions documentation](https://developers.google.com/earth-engine/apidocs/ee-image-reduceregions) you can find it here. The reducer asks for a scale so that it knows which units to do the analysis in.
 </details>
+
+```
 
 ```{python, eval=FALSE}
 province_statistics = viirs_image_clipped.reduceRegions(

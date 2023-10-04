@@ -1178,8 +1178,10 @@ object in the form of a dictionary, we need can call the
 information to a dictionary that we can extract useful information from.
 However, when working in Jupyter notebooks, we can simply call the
 object itself to display it inline:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Note: we don&#39;t recomend running this line if you are using VM Box virtual machines as they might cause it to crash, however, we still would like to show this option of getting info, as it is displayed more clearly within Jupyter Notebook.</span></span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co"># ee.ImageCollection(&quot;NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG&quot;)</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Note: we don&#39;t recomend running this line if you are using VirtualBox virtual machines</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co">#   as they might cause it to crash, however, we still would like to show this option of getting info, </span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#   as it is displayed more clearly within Jupyter Notebook.</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co"># ee.ImageCollection(&quot;NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG&quot;)</span></span></code></pre></div>
 <p>In Jupyter, this will display the ImageCollection object.</p>
 <p>Inspecting the ImageCollection object, we can see that it has several
 properties. It includes <code>type</code>, <code>id</code>,
@@ -1404,17 +1406,17 @@ Please verify this in your own environment.</p>
 <strong>Question 1</strong>: Do you understand the band names?
 </p>
 </blockquote>
-</div>
 <details>
 <summary>
 <strong>Click for answer</strong>
 </summary>
 One way of checking the amount of bands returned will be with the line
-<code>print(len(viirs_image_clipped.getInfo()[&#39;bands&#39;]))</code>. The
+<code>print(len(viirs_image_clipped.getInfo()[‘bands’]))</code>. The
 naming should start with something like “20170101_avg_rad” the first
 part refers to the date of the image Jan 01, 2017, and the later is an
 abbreviation of average radiation.
 </details>
+</div>
 </div>
 <div id="calculating-statistics" class="section level4">
 <h4>Calculating statistics</h4>
@@ -1444,7 +1446,6 @@ Find out using the documentation of the imagery and the documentation of
 <code>reduceRegions</code>.
 </p>
 </blockquote>
-</div>
 <details>
 <summary>
 <strong>Click for answer</strong>
@@ -1453,6 +1454,7 @@ In case you had trouble finding the <a href="https://developers.google.com/earth
 documentation</a> you can find it here. The reducer asks for a scale so
 that it knows which units to do the analysis in.
 </details>
+</div>
 <div class="sourceCode" id="cb19"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>province_statistics <span class="op">=</span> viirs_image_clipped.reduceRegions(</span>
 <span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>    collection <span class="op">=</span> ee_netherlands,</span>
 <span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>    reducer <span class="op">=</span> ee.Reducer.mean(),</span>
