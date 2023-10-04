@@ -1178,7 +1178,8 @@ object in the form of a dictionary, we need can call the
 information to a dictionary that we can extract useful information from.
 However, when working in Jupyter notebooks, we can simply call the
 object itself to display it inline:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>ee.ImageCollection(<span class="st">&quot;NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Note: we don&#39;t recomend running this line if you are using VM Box virtual machines as they might cause it to crash, however, we still would like to show this option of getting info, as it is displayed more clearly within Jupyter Notebook.</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co"># ee.ImageCollection(&quot;NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG&quot;)</span></span></code></pre></div>
 <p>In Jupyter, this will display the ImageCollection object.</p>
 <p>Inspecting the ImageCollection object, we can see that it has several
 properties. It includes <code>type</code>, <code>id</code>,

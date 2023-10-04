@@ -203,7 +203,8 @@ print(ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG").getInfo()['properti
 Here, we call the `getInfo` method to convert the object information to a dictionary that we can extract useful information from. However, when working in Jupyter notebooks, we can simply call the object itself to display it inline:
 
 ```{python, eval=FALSE}
-ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG")
+# Note: we don't recomend running this line if you are using VM Box virtual machines as they might cause it to crash, however, we still would like to show this option of getting info, as it is displayed more clearly within Jupyter Notebook.
+# ee.ImageCollection("NOAA/VIIRS/DNB/MONTHLY_V1/VCMCFG")
 ```
 
 In Jupyter, this will display the ImageCollection object. 
