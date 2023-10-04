@@ -73,13 +73,15 @@ One of the prominent features of GEE is its extensive collection of raster data 
 
 -- Pérez-Cutillas et al., 2023
 
-### Nighttime Light Emission
+### Nighttime light emission
 
 In this tutorial, we will conduct a relatively straightforward analysis to demonstrate commonly used tools in Google Earth Engine (GEE). Our main focus is to show you how to work with GEE in Python, locate tools and documentation, and read the JavaScript (JS) documentation.
 
 The analysis we will perform involves comparing the amount of light emitted at night in the Netherlands over time. However, you can choose a different area for your analysis, as we will be using a global dataset from 2012 to the present.
 
-To set up the required environment, you will need the following dependencies. Save the following YAML code in a new file named `env.yaml` and create and activate the environment using mamba 
+### Environment set up 
+
+To set up the required environment, you will need the following dependencies. Save the following YAML code in a new file named `env.yaml` then create and activate the environment using mamba 
 
 ```{yaml, eval=FALSE}
 name: pythonGee
@@ -93,7 +95,10 @@ dependencies:
   - pygadm
   - geopandas
   - geojson
+  - spyder
 ```
+
+Once the environment is activated, run the code `jupyter notebook` in your terminal to open up a Jupyter Notebook for your project (similiar to how you open Spyder). You can refer to the Python Refresher or the [Jupyter Notebook Documentation](https://jupyter-notebook.readthedocs.io/en/latest/) for a quick guide on how to use the notebooks. Once you have the notebook open, create a new file with the Python3 kernel. You will write and run the rest of your code here.
 
 To test the environment, try importing the following packages:
 
@@ -355,6 +360,10 @@ viirs_image_clipped = viirs_image.clip(ee_netherlands)
 ```{block, type="alert alert-success"}
 > **Question 1**: Do you understand the band names?
 ```
+<details>
+  <summary>**Click for answer**</summary>
+  One way of checking the amount of bands returned will be with the line `print(len(viirs_image_clipped.getInfo()['bands']))`. The naming should start with something like "20170101_avg_rad" the first part refers to the date of the image Jan 01, 2017, and the later is an abbreviation of average radiation.
+</details>
 
 #### Calculating statistics
 
@@ -366,6 +375,10 @@ Since we want to take the average over the collection, we will utilize the `ee.R
 > **Question 2**: Why do we choose 463.83 meters as scale? Find out using the documentation of the imagery and the documentation of `reduceRegions`.
 ```
 
+<details>
+  <summary>**Click for answer**</summary>
+  In case you had trouble finding the [reduceRegions documentation](https://developers.google.com/earth-engine/apidocs/ee-image-reduceregions) you can find it here. The reducer asks for a scale so that it knows which units to do the analysis in.
+</details>
 
 ```{python, eval=FALSE}
 province_statistics = viirs_image_clipped.reduceRegions(
@@ -500,7 +513,7 @@ visualization_params = {
     'min': 0,
     'max': 10,
     'opacity': 0.7,
-    'bands': ['20230101_avg_rad']
+    'bands': ['20221201_avg_rad']
 }
 
 Map.addLayer(ee_object = viirs_image_clipped, 
